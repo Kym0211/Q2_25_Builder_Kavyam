@@ -39,7 +39,7 @@ pub struct Initialize<'info> {
         payer = signer,
         seeds = [b"state", signer.key().as_ref()],
         bump,
-        space = VaultState::INIT_SPACE
+        space = 8 + VaultState::INIT_SPACE
     )]
     pub vault_state: Account<'info, VaultState>,
 
@@ -115,6 +115,7 @@ impl<'info> Initialize<'info> {
     pub fn initialize(&mut self, bumps: &InitializeBumps) -> Result<()> {
         self.vault_state.state_bump = bumps.vault_state;
         self.vault_state.vault_bump = bumps.vault;
+
         Ok(())
     }
 }
