@@ -1,16 +1,20 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+import { BN, Program } from "@coral-xyz/anchor";
 import { Escrow } from "../target/types/escrow";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import { assert } from "chai";
 
-describe("escrow", () => {
+
+describe("vault", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  const provider = anchor.AnchorProvider.env();
+  
+  anchor.setProvider(provider);
 
-  const program = anchor.workspace.Escrow as Program<Escrow>;
+  // the program is accessible on the anchor.workspace attribute
+  const program = anchor.workspace.Vault as Program<Escrow>;
 
   it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
+
   });
 });
