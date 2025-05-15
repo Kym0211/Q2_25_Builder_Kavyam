@@ -3,7 +3,6 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount}
 };
-
 use crate::state::Config;
 
 #[derive(Accounts)]

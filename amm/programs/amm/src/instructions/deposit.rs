@@ -33,12 +33,14 @@ pub struct Deposit<'info> {
     pub vault_y: Account<'info, TokenAccount>,
 
     #[account(
+        mut,
         associated_token::mint = mint_x,
         associated_token::authority = config,
     )]
     pub user_x: Account<'info, TokenAccount>,
     
     #[account(
+        mut,
         associated_token::mint = mint_y,
         associated_token::authority = config,
     )]
