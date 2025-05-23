@@ -1,18 +1,19 @@
 [toolchain]
 anchor_version = "0.31.0"
+package_manager = "yarn"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-escrow = "FpQqpicKG7bFUg8ASQSRSKLAf7gDPLsWEt89mf4RK762"
+escrow = "FueDhRTexJfY9TXVXTSQaQQHkwMP6Enq6AJn4BPhbV51"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

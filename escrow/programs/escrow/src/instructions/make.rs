@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{Mint, TokenAccount, TokenInterface},
-    token_2022::{TransferChecked, transfer_checked}
+    associated_token::AssociatedToken, 
+    token_2022::{transfer_checked, TransferChecked}, 
+    token_interface::{Mint, TokenAccount, TokenInterface}
 };
 
 use crate::state::Escrow;
@@ -29,14 +29,14 @@ pub struct Make<'info> {
         associated_token::authority = maker,
         associated_token::token_program = token_program
     )]
-    pub maker_ata_a: InterfaceAccount<'info, TokenAccount>, // Changed from Interface
+    pub maker_ata_a: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         init,
         payer = maker,
         seeds = [b"escrow", maker.key().as_ref(), seed.to_le_bytes().as_ref()],
         bump,
-        space = 8 + Escrow::INIT_SPACE,
+        space = 8 + Escrow::INIT_SPACE
     )]
     pub escrow: Account<'info, Escrow>,
 
@@ -45,42 +45,40 @@ pub struct Make<'info> {
         payer = maker,
         associated_token::mint = mint_a,
         associated_token::authority = escrow,
-        associated_token::token_program = token_program,
+        associated_token::token_program = token_program
     )]
     pub vault: InterfaceAccount<'info, TokenAccount>,
 
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Interface<'info, TokenInterface>,
-    pub system_program: Program<'info, System>,
+    pub system_program: Program<'info, System>
 }
 
 impl<'info> Make<'info> {
-    pub fn init_escrow(&mut self, seed: u64, receive: u64, bumps: &MakeBumps) -> Result<()> {
+    pub fn initialize(&mut self, seed: u64, receive: u64, bumps: &MakeBumps) -> Result<()> {
         self.escrow.set_inner(Escrow { 
             seed, 
-            maker: self.maker.key(),
-            mint_a: self.mint_a.key(),
-            mint_b: self.mint_b.key(),
-            receive,
-            bump: bumps.escrow 
+            maker: self.maker.key(), 
+            mint_a: self.mint_a.key(), 
+            mint_b: self.mint_b.key(), 
+            receive, 
+            bump: bumps.escrow
         });
         Ok(())
     }
 
     pub fn deposit(&mut self, deposit: u64) -> Result<()> {
-        let transfer_accounts = TransferChecked {
+        let cpi_account = TransferChecked {
             from: self.maker_ata_a.to_account_info(),
             mint: self.mint_a.to_account_info(),
             to: self.vault.to_account_info(),
             authority: self.maker.to_account_info(),
-        };
+        }; 
 
-        let cpi_ctx = CpiContext::new(
-            self.token_program.to_account_info(),
-            transfer_accounts
-        );
+        let cpi_ctx = CpiContext::new(self.token_program.to_account_info(), cpi_account);
 
         transfer_checked(cpi_ctx, deposit, self.mint_a.decimals)?;
+
         Ok(())
     }
 }
