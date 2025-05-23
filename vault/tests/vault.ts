@@ -5,117 +5,118 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { confirmTransaction } from "@solana-developers/helpers";
 import { assert } from "chai";
 
-
 describe("vault", () => {
   // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.env();
-  
+  const provider = anchor.AnchorProvider.env()
   anchor.setProvider(provider);
-
-  // the program is accessible on the anchor.workspace attribute
-  const program = anchor.workspace.Vault as Program<Vault>;
 
   const connection = provider.connection;
 
+  const program = anchor.workspace.vault as Program<Vault>;
+
   let signer;
-  let vault;
   let vault_state;
+  let vault;
   let bump;
 
-  before(async () => {
-      signer = anchor.web3.Keypair.generate();
+  before(async() => {
+    signer = anchor.web3.Keypair.generate();
 
-      [vault_state, bump] = PublicKey.findProgramAddressSync([
-          Buffer.from("state"),
-          signer.publicKey.toBuffer(),
-      ], program.programId);
-      console.log(`vault_state: ${vault_state} | bump: ${bump}`);
-      
-      [vault, bump] = PublicKey.findProgramAddressSync([
-        Buffer.from("vault"),
-        vault_state.toBuffer(),
-      ], program.programId);
-      console.log(`vault: ${vault} | bump: ${bump}`)
+    [vault_state, bump] = PublicKey.findProgramAddressSync([
+      Buffer.from("vault-state"),
+      signer.publicKey.toBuffer(),
+    ], program.programId);
+    console.log(`vault-state: ${vault_state} | bump: ${bump}`);
 
-      await airdrop(connection, signer.publicKey, 5);
-      // airdrop some SOL to the vault so it does not disappear (make it rent exempt)
+    [vault, bump] = PublicKey.findProgramAddressSync([
+      Buffer.from("vault"),
+      vault_state.toBuffer()
+    ], program.programId);
+    console.log(`vault: ${vault} | bump: ${bump}`);
 
-      // let rent_exemption_amount = await calculateRentExemption(connection, vault);
-      await airdrop(connection, vault, 1);
-  });
+    let signer_balance = getBalance(connection, signer.publicKey)
+    console.log(`signer balance: ${signer_balance}`);
+
+    await airdrop(connection, vault, 1);
+    await airdrop(connection, signer.publicKey, 5);
+
+  })
 
   it("Is initialized!", async () => {
+    // Add your test here.
     const tx = await program.methods
       .initialize()
-      .accounts({
+      .accountsStrict({
         signer: signer.publicKey,
         vaultState: vault_state,
         vault: vault,
-        systemProgram: SystemProgram.programId,
+        systemProgram: SystemProgram.programId
       })
       .signers([signer])
-      .rpc();
-    console.log("✅ Your Initialization transaction signature", tx);
+      .rpc()
+    console.log("Your transaction signature", tx);
   });
 
-  it("Is Deposited!", async () => {
-    const tx  = await program.methods
+  it("testing deposit!", async () => {
+    // Add your test here.
+    const tx = await program.methods
       .deposit(new BN(1_000_000_000))
-      .accounts({
+      .accountsStrict({
         signer: signer.publicKey,
         vaultState: vault_state,
         vault: vault,
         systemProgram: SystemProgram.programId
       })
       .signers([signer])
-      .rpc();
-    console.log("✅ Your Deposit transaction signature", tx);
-  
-    // assert that the vault balance increase after the transaction
+      .rpc()
+
     let vaultBalance = await getBalance(connection, vault);
-    assert.equal(vaultBalance, 2 * 1_000_000_000);
-
-    // assert that the signer balance decrease after the transaction
-    // let signerBalance = await getBalance(connection, signer.publicKey); 
-    // assert.isTrue(signerBalance <= 5);
+    console.log(`vaultBalance: ${vaultBalance}`)
+    assert.equal(vaultBalance, 2);
+    console.log("Your transaction signature", tx);
   });
 
-  it("Is Withdraw!", async () => {
-    const tx = program.methods
-      .withdraw(new BN(1))
-      .accounts({
+  it("testing withdraw!", async () => {
+    // Add your test here.
+    let signerBalance = await getBalance(connection, signer.publicKey);
+    console.log(`signer balance before: ${signerBalance}`);
+    const tx = await program.methods
+      .withdraw(new BN(1_000_000_000))
+      .accountsStrict({
         signer: signer.publicKey,
         vaultState: vault_state,
         vault: vault,
         systemProgram: SystemProgram.programId
       })
       .signers([signer])
-      .rpc();
+      .rpc()
 
-      let vaultBalance = await getBalance(connection, vault);
-      // assert that the vault balance increase after the transaction
-      assert.equal(vaultBalance, 2 * 1_000_000_000);
+    signerBalance = await getBalance(connection, signer.publicKey);
+    console.log(`signer balance after: ${signerBalance}`);
 
-      // assert that the signer balance decrease after the transaction
-      let signerBalance = await getBalance(connection, signer.publicKey); 
-      assert.isTrue(signerBalance >= 4.9);
+    let vaultBalance = await getBalance(connection, vault);
+    console.log(`vaultBalance: ${vaultBalance}`)
+    assert.equal(vaultBalance, 1);
+    console.log("Your transaction signature", tx);
   });
 
-  it("Is Closed!", async () => {
-    const tx = program.methods
+  it("testing close!", async () => {
+    // Add your test here.
+    const tx = await program.methods
       .close()
-      .accounts({
+      .accountsStrict({
         signer: signer.publicKey,
         vaultState: vault_state,
         vault: vault,
         systemProgram: SystemProgram.programId
       })
       .signers([signer])
-      .rpc();
+      .rpc()
+    console.log("Your transaction signature", tx);
   });
-});
+})
 
-async function airdrop(connection, address: PublicKey, amount: number) {
+async function airdrop(connection:anchor.web3.Connection, address: PublicKey, amount: number) {
   let airdrop_signature = await connection.requestAirdrop(
     address,
     amount * LAMPORTS_PER_SOL
@@ -149,5 +150,5 @@ async function calculateRentExemption(connection: anchor.web3.Connection, addres
 async function getBalance(connection: anchor.web3.Connection, address: PublicKey) {
   let accountInfo = await connection.getAccountInfo(address);
 
-  return accountInfo.lamports;
+  return (accountInfo.lamports / LAMPORTS_PER_SOL);
 }

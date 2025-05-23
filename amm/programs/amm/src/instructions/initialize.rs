@@ -5,21 +5,22 @@ use anchor_spl::{
 };
 use crate::state::Config;
 
+
 #[derive(Accounts)]
 #[instruction(seed: u64)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub initializer:Signer<'info>,
+    pub initializer: Signer<'info>,
     pub mint_x: Account<'info, Mint>,
     pub mint_y: Account<'info, Mint>,
 
     #[account(
         init,
         payer = initializer,
-        seeds = [b"lp", config.key.as_ref()],
+        seeds = [b"lp", config.key().as_ref()],
         bump,
         mint::decimals = 6,
-        mint::authority = config,
+        mint:: authority = config,
     )]
     pub mint_lp: Account<'info, Mint>,
 
@@ -39,23 +40,24 @@ pub struct Initialize<'info> {
     )]
     pub vault_y: Account<'info, TokenAccount>,
 
+    //Rust Code
     #[account(
         init,
         payer = initializer,
-        seeds = [b"config", seed.to_le_bytes().as_ref()],
+        seeds = [b"config",seed.to_le_bytes().as_ref()],
         bump,
-        space = 8 + Config::INIT_SPACE,
+        space = 8 + Config::INIT_SPACE
     )]
     pub config: Account<'info, Config>,
 
-    pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> Initialize<'info> {
-    pub fn init(&mut self, seed: u64, fees: u16, authority:Option<Pubkey>, bumps: InitializeBumps) -> Result<()> {
-
+    pub fn initialize(&mut self, seed: u64, fees: u16, authority: Option<Pubkey>, bumps: &InitializeBumps) -> Result<()> {
+        
         self.config.set_inner(Config { 
             seed, 
             authority, 
@@ -64,8 +66,9 @@ impl<'info> Initialize<'info> {
             fees, 
             locked: false, 
             config_bump: bumps.config, 
-            lp_bump: bumps.mint_lp 
+            lp_bump:  bumps.mint_lp
         });
+
         Ok(())
     }
 }

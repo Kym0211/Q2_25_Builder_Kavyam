@@ -7,26 +7,30 @@ use constant_product_curve::ConstantProduct;
 
 use crate::state::Config;
 
+
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     #[account(mut)]
-    pub user:Signer<'info>,
+    pub user: Signer<'info>,
     pub mint_x: Account<'info, Mint>,
     pub mint_y: Account<'info, Mint>,
 
     #[account(
+        mut,
         seeds = [b"lp", config.key().as_ref()],
         bump = config.lp_bump,
     )]
     pub mint_lp: Account<'info, Mint>,
 
     #[account(
+        mut,
         associated_token::mint = mint_x,
         associated_token::authority = config,
     )]
     pub vault_x: Account<'info, TokenAccount>,
 
     #[account(
+        mut,
         associated_token::mint = mint_y,
         associated_token::authority = config,
     )]
@@ -35,19 +39,18 @@ pub struct Deposit<'info> {
     #[account(
         mut,
         associated_token::mint = mint_x,
-        associated_token::authority = config,
+        associated_token::authority = user,
     )]
     pub user_x: Account<'info, TokenAccount>,
     
     #[account(
         mut,
         associated_token::mint = mint_y,
-        associated_token::authority = config,
+        associated_token::authority = user,
     )]
     pub user_y: Account<'info, TokenAccount>,
 
 
-    
     #[account(
         has_one = mint_x,
         has_one = mint_y,
@@ -64,14 +67,13 @@ pub struct Deposit<'info> {
     )]
     pub user_lp: Account<'info, TokenAccount>,
 
-    pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
 impl<'info> Deposit<'info> {
     pub fn deposit(&mut self, amount: u64, max_x: u64, max_y: u64) -> Result<()> {
-
         assert!(amount != 0);
 
         let (x,y) = match self.mint_lp.supply == 0 && self.vault_x.amount == 0 {
@@ -86,10 +88,10 @@ impl<'info> Deposit<'info> {
                 ).unwrap();
 
                 (amounts.x, amounts.y)
-            },
+            }
         };
 
-        assert!(x <= max_x && y <= max_y);
+        assert!(x <= max_x && y <=max_y);
         self.deposit_token(true, x)?;
         self.deposit_token(false, y)?;
         self.mint_lp_token(amount)?;
@@ -111,13 +113,13 @@ impl<'info> Deposit<'info> {
             authority: self.user.to_account_info()
         };
 
-        let ctx = CpiContext::new(cpi_program, cpi_accounts);
+        let ctx: CpiContext<'_, '_, '_, '_, Transfer<'_>> = CpiContext::new(cpi_program, cpi_accounts);
 
         transfer(ctx, amount)?;
         Ok(())
     }
 
-    pub fn mint_lp_token(&self, amount: u64) -> Result<()>{
+    pub fn mint_lp_token(&self, amount: u64) -> Result<()> {
         let cpi_program = self.token_program.to_account_info();
 
         let cpi_accoutns = MintTo{

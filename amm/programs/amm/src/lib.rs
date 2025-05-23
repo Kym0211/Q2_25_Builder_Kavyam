@@ -1,12 +1,12 @@
 #![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 
-mod instructions;
-mod state;
+declare_id!("BPWKPL7uX4zWkm5FcJgbzFPaHJrck8vjfAkNhRwx6DA2");
+
+pub mod instructions;
+pub mod state;
 
 use instructions::*;
-
-declare_id!("DG9KZ5sVEq7Mm1ksmDujAwicJ6t1nvdXSj59Zef7pdZy");
 
 #[program]
 pub mod amm {
@@ -18,7 +18,8 @@ pub mod amm {
         fees: u16,
         authority: Option<Pubkey>,
     ) -> Result<()> {
-        ctx.accounts.init(seed, fees, authority, ctx.bumps)?;
+        ctx.accounts.initialize(seed, fees, authority, &ctx.bumps)?;
+
         Ok(())
     }
 
@@ -28,6 +29,9 @@ pub mod amm {
         max_x: u64,
         max_y: u64,
     ) -> Result<()> {
-        ctx.accounts.deposit(amount, max_x, max_y)
+        ctx.accounts.deposit(amount, max_x, max_y)?;
+
+        Ok(())
     }
+
 }
