@@ -168,7 +168,7 @@ describe("amm", () => {
   });
 });
 
-async function airdrop(connection:anchor.web3.Connection, address: PublicKey, amount: number){
+async function airdrop(connection: anchor.web3.Connection, address: PublicKey, amount: number){
   let airdrop_signature = await connection.requestAirdrop(
     address,
     amount * LAMPORTS_PER_SOL
