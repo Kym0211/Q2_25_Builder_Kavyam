@@ -27,8 +27,8 @@ pub mod marketplace {
         Ok(())
     }
 
-    pub fn purchase(ctx: Context<Purchase>) -> Result<()> {
+    // pub fn purchase(ctx: Context<Purchase>) -> Result<()> {
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }
